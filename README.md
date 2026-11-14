@@ -35,7 +35,7 @@ U-Boot 2011.06, eMMC with 37 partitions.
 | #   | name   | size | notes                                                           |
 | --- | ------ | ---- | --------------------------------------------------------------- |
 | 9   | RFS    | 36M  | rootfs, squashfs, read-only                                     |
-| 26  | usrfs  | 240M | writable, mounted at `/usr/local`; holds `/usr/local/scripts/*` |
+| 26  | usrfs  | 240M | mounted at `/usr/local`; holds `/usr/local/scripts/*`. **READ-ONLY at normal boot** (`/etc/fstab`: `ext4 ro`); only rw when you remount it in the maintenance shell |
 | 28  | optfs  | 650M | writable                                                        |
 | 29  | varlfs | 340M | writable, mounted at `/var/local`                               |
 | 36  | apps   | 600M | app payloads — likely target for deletion                       |
@@ -314,20 +314,61 @@ static `dropbearmulti` for this exact target:
 CI runs on an Ubuntu runner (no local toolchain needed) and uploads
 `dropbearmulti-armv7-static` as an artifact.
 
-**Deploy (planned):** from the `init=/bin/sh` maintenance shell (p26 mounted
-rw, 54 MB free), place `dropbearmulti` in `/usr/local/bin/`, symlink the
-applet names, generate a host key with `dropbearkey -t ed25519 -f
-/usr/local/etc/dropbear/dropbear_ed25519_host_key`, install the maintainer's
-SSH **public** key to `/usr/local/etc/dropbear/authorized_keys`, add an
-`iptables -I INPUT 1 -p tcp --dport 22 -j ACCEPT` ahead of the firewall
-drops, and launch `dropbear -r <hostkey> -p 22` from the already-present
-`start-firewall.sh` hook (reuse the slot the dead telnet script used).
+### WORKING — deployed and persistent across reboots
+
+Confirmed: `ssh root@<tv>` gives uid 0 on the armv7l TV, and it survives a
+power cycle. The must-get-right details, all learned the hard way:
+
+- **p26 is READ-ONLY at normal boot.** This was the final blocker: the boot
+  hook's log redirect to `/usr/local/...` failed silently and aborted the
+  launcher before dropbear ever started. The launcher now **reads** everything
+  from the (pre-populated) read-only p26 and **writes only to `/tmp`** (tmpfs).
+  All on-device state is staged once from the maintenance shell (p26 rw there).
+- **No PTY in this kernel**, so dropbear can only do PTY-less channels: use
+  `ssh root@tv '<cmd>'` (one-shot) or `ssh -T root@tv 'sh'` (interactive
+  dumb shell). A bare `ssh root@tv` would request a PTY and also source the
+  heavy `/etc/profile`, so it hangs — don't use it.
+- **root's shell `/bin/bash` does not exist** → dropbear rejects every login
+  with "invalid shell". Fixed by bind-mounting a prebuilt `/etc/passwd` copy
+  (on p26) whose root shell is `/bin/sh`. `/etc` is read-only, hence the bind.
+- **root's home `/root` is read-only squashfs**, so `authorized_keys` can't
+  live there → bind-mount a prebuilt home from p26 over `/root`.
+- **firewall drops both INPUT dport 22 and OUTPUT sport 22** (`#for debug
+  sshd`). The launcher inserts `ACCEPT`s ahead of the chain jumps and
+  re-asserts them in a loop (firewall-init-subrule.sh runs in the background
+  and can flush them).
+- **launch early + detached:** dropbear is started from the *top* of
+  `start-firewall.sh` and via `setsid` (survives the launcher/rcS exiting).
+  An earlier version slept 10s before launching and got reaped.
+
+On-device layout (staged from the maintenance shell, read-only at runtime):
+
+```
+/usr/local/bin/dropbearmulti          + symlinks dropbear/dropbearkey/dbclient/scp
+/usr/local/dropbear/dropbear_ed25519_host_key
+/usr/local/dropbear/root-home/.ssh/authorized_keys   (your SSH pubkey)
+/usr/local/dropbear/passwd            (copy of /etc/passwd, root shell -> /bin/sh)
+/usr/local/scripts/rtr-sshd.sh        (the launcher; logs to /tmp)
+/usr/local/scripts/start-firewall.sh  (stock + the rtr-sshd hook at the top)
+```
+
+`scripts/rtr-sshd.sh` and `scripts/start-firewall.sh` in this repo are the
+exact deployed files.
 
 **File transfer to the TV:** U-Boot reports "No ethernet found" (U-Boot has
-no NIC driver), but Linux does (`Mstar_emac`). Ethernet comes up in normal
-boot; in the maintenance shell it must be brought up manually
-(`ifconfig eth0 up` + `udhcpc`) — to be tested. Fallback is base64-over-serial
-in verified chunks if maintenance-mode networking doesn't come up.
+no NIC driver), but Linux does (`Mstar_emac`). In the maintenance shell,
+ethernet needs a cable + manual bring-up (`ifconfig eth0 <ip>` — DHCP script
+isn't present, so a static IP on the LAN is simplest); then `wget` the files
+from a `python3 -m http.server` on the workstation. Binary + scripts all went
+over this way, md5-verified.
+
+**Usage:**
+```
+ssh root@<tv-ip> 'rm -rf /APPS/<bloat>'     # one-shot maintenance command
+ssh -T root@<tv-ip> 'sh'                     # interactive (PTY-less) shell
+```
+The TV's IP is DHCP-assigned (changes across boots); find it by sweeping the
+LAN for an `armv7l` host answering on 22, or give it a DHCP reservation.
 
 ## Publishing
 
