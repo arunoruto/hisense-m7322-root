@@ -18,16 +18,26 @@ on:
 
 env:
   DROPBEAR_TAG: ${{ github.event.inputs.dropbear_tag || 'DROPBEAR_2022.83' }}
-  CROSS: arm-linux-gnueabi
+  # musl soft-float ARM: a glibc static binary hits a _dl_call_libc_early_init
+  # crash on the TV's old kernel; musl static binaries are truly standalone.
+  CROSS: arm-linux-musleabi
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Install soft-float ARM cross toolchain
+      - name: Fetch musl soft-float ARM cross toolchain
         run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-arm-linux-gnueabi autoconf automake file
+          sudo apt-get update && sudo apt-get install -y autoconf automake file
+          # Soft-float (musleabi, not musleabihf) to match the TV's ld-linux.so.3.
+          for url in \
+            "https://musl.cc/${CROSS}-cross.tgz" \
+            "https://more.musl.cc/11/x86_64-linux-musl/${CROSS}-cross.tgz"; do
+            echo "trying $url"; wget -q -O tc.tgz "$url" && break
+          done
+          test -s tc.tgz
+          tar xzf tc.tgz
+          echo "$PWD/${CROSS}-cross/bin" >> "$GITHUB_PATH"
 
       - name: Fetch Dropbear source at pinned tag
         run: |
@@ -39,23 +49,20 @@ jobs:
         working-directory: dropbear
         run: |
           cat > localoptions.h <<'EOF'
-          /* Pubkey-only: password auth needs crypt(), which modern glibc drops,
-             and pubkey auth is the right choice for an internet-facing TV. */
+          /* Pubkey-only: password auth needs crypt(), and pubkey auth is the
+             right choice for an internet-facing TV. */
           #define DROPBEAR_SVR_PASSWORD_AUTH 0
           #define DROPBEAR_SVR_PUBKEY_AUTH 1
           #define DROPBEAR_CLI_PASSWORD_AUTH 0
           EOF
 
-      - name: Configure (non-PIE, no zlib, no utmp/wtmp)
+      - name: Configure (musl static, no zlib, no utmp/wtmp)
         working-directory: dropbear
         run: |
-          # -fno-pie at compile + -static -no-pie at link => classic static ELF.
-          # Ubuntu gcc defaults to static-PIE, which aborts on this TV's old
-          # kernel/glibc with a _dl_call_libc_early_init assertion.
           autoconf && autoheader
           ./configure --host=${CROSS} \
             CC=${CROSS}-gcc \
-            CFLAGS="-Os -fno-pie" \
+            CFLAGS="-Os" \
             --disable-zlib \
             --disable-lastlog --disable-utmp --disable-utmpx \
             --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline
@@ -64,7 +71,7 @@ jobs:
         working-directory: dropbear
         run: |
           make -j"$(nproc)" PROGRAMS="dropbear dropbearkey dbclient scp" \
-            MULTI=1 STATIC=1 LDFLAGS="-static -no-pie"
+            MULTI=1 STATIC=1 LDFLAGS="-static"
           ${CROSS}-strip dropbearmulti
 
       - name: Test — static, non-PIE, ARM EABI5 soft-float (what the TV needs)
