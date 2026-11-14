@@ -1,0 +1,30 @@
+name: Test access scripts
+
+on:
+  push:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/test-access.yml'
+  pull_request:
+    paths:
+      - 'scripts/**'
+      - 'tests/**'
+      - '.github/workflows/test-access.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check shell syntax
+        run: |
+          for script in scripts/*.sh; do sh -n "$script"; done
+      - name: Check Python syntax
+        run: python3 -m compileall -q scripts tests
+      - name: Test access tools without TV hardware
+        run: python3 -m unittest discover -s tests -v

@@ -1,0 +1,2 @@
+# Only UART access needs this; SSH installers use Python's standard library.
+pyserial==3.5

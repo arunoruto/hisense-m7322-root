@@ -54,7 +54,7 @@ jobs:
         run: |
           cat > localoptions.h <<'EOF'
           /* Pubkey-only: password auth needs crypt(), and pubkey auth is the
-             right choice for an internet-facing TV. */
+             chosen authentication for remote TV maintenance. */
           #define DROPBEAR_SVR_PASSWORD_AUTH 0
           #define DROPBEAR_SVR_PUBKEY_AUTH 1
           #define DROPBEAR_CLI_PASSWORD_AUTH 0
@@ -112,9 +112,18 @@ jobs:
           echo "ALL TV SMOKE TESTS PASSED"
           ls -l dropbearmulti
 
+      - name: Record build provenance
+        working-directory: dropbear
+        run: |
+          sha256sum dropbearmulti > SHA256SUMS
+          { printf 'Dropbear tag: %s\nZig version: %s\nTarget: %s\nSource: ' "$DROPBEAR_TAG" "$ZIG_VERSION" "$CROSS"; git rev-parse HEAD; } > build-info.txt
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: dropbearmulti-armv7-static
-          path: dropbear/dropbearmulti
+          path: |
+            dropbear/dropbearmulti
+            dropbear/SHA256SUMS
+            dropbear/build-info.txt
           if-no-files-found: error
