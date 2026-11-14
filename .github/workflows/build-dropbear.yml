@@ -18,26 +18,30 @@ on:
 
 env:
   DROPBEAR_TAG: ${{ github.event.inputs.dropbear_tag || 'DROPBEAR_2022.83' }}
-  # musl soft-float ARM: a glibc static binary hits a _dl_call_libc_early_init
-  # crash on the TV's old kernel; musl static binaries are truly standalone.
+  # Soft-float musl ARM via zig cc (zig bundles musl). musl static binaries
+  # are truly standalone, unlike glibc ones which crash on the TV's old kernel
+  # with a _dl_call_libc_early_init assertion. musleabi = soft-float, matching
+  # the TV's ld-linux.so.3.
   CROSS: arm-linux-musleabi
+  ZIG_VERSION: "0.13.0"
 
 jobs:
   build:
     runs-on: ubuntu-24.04
     steps:
-      - name: Fetch musl soft-float ARM cross toolchain
+      - name: Fetch zig (bundled musl cross-compiler)
         run: |
-          sudo apt-get update && sudo apt-get install -y autoconf automake file
-          # Soft-float (musleabi, not musleabihf) to match the TV's ld-linux.so.3.
-          for url in \
-            "https://musl.cc/${CROSS}-cross.tgz" \
-            "https://more.musl.cc/11/x86_64-linux-musl/${CROSS}-cross.tgz"; do
-            echo "trying $url"; wget -q -O tc.tgz "$url" && break
-          done
-          test -s tc.tgz
-          tar xzf tc.tgz
-          echo "$PWD/${CROSS}-cross/bin" >> "$GITHUB_PATH"
+          sudo apt-get update && sudo apt-get install -y autoconf automake file binutils qemu-user-static
+          wget -q "https://ziglang.org/download/${ZIG_VERSION}/zig-linux-x86_64-${ZIG_VERSION}.tar.xz"
+          tar xf "zig-linux-x86_64-${ZIG_VERSION}.tar.xz"
+          ZIG="$PWD/zig-linux-x86_64-${ZIG_VERSION}/zig"
+          # Wrapper tools so autotools sees a normal cross toolchain.
+          mkdir -p xbin
+          printf '#!/bin/sh\nexec "%s" cc -target %s "$@"\n' "$ZIG" "$CROSS" > xbin/${CROSS}-gcc
+          printf '#!/bin/sh\nexec "%s" ar "$@"\n'            "$ZIG"          > xbin/${CROSS}-ar
+          printf '#!/bin/sh\nexec "%s" ranlib "$@"\n'        "$ZIG"          > xbin/${CROSS}-ranlib
+          chmod +x xbin/*
+          echo "$PWD/xbin" >> "$GITHUB_PATH"
 
       - name: Fetch Dropbear source at pinned tag
         run: |
@@ -61,18 +65,18 @@ jobs:
         run: |
           autoconf && autoheader
           ./configure --host=${CROSS} \
-            CC=${CROSS}-gcc \
+            CC=${CROSS}-gcc AR=${CROSS}-ar RANLIB=${CROSS}-ranlib \
             CFLAGS="-Os" \
             --disable-zlib \
             --disable-lastlog --disable-utmp --disable-utmpx \
             --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline
 
-      - name: Build static dropbearmulti
+      - name: Build static dropbearmulti (stripped at link)
         working-directory: dropbear
         run: |
           make -j"$(nproc)" PROGRAMS="dropbear dropbearkey dbclient scp" \
-            MULTI=1 STATIC=1 LDFLAGS="-static"
-          ${CROSS}-strip dropbearmulti
+            MULTI=1 STATIC=1 AR=${CROSS}-ar RANLIB=${CROSS}-ranlib \
+            LDFLAGS="-static -Wl,-s"
 
       - name: Test — static, non-PIE, ARM EABI5 soft-float (what the TV needs)
         working-directory: dropbear
@@ -85,14 +89,13 @@ jobs:
             echo "FAIL: PIE build crashes on the TV's kernel"; exit 1; fi
           # Soft-float ABI: TV userland is ld-linux.so.3 (gnueabi), not -armhf.
           # A hard-float binary would carry Tag_ABI_VFP_args: VFP registers.
-          if ${CROSS}-readelf -A dropbearmulti | grep -qi "Tag_ABI_VFP_args"; then
+          if readelf -A dropbearmulti | grep -qi "Tag_ABI_VFP_args"; then
             echo "FAIL: hard-float ABI, TV is soft-float"; exit 1; fi
           echo "OK: static non-PIE ARM EABI5 soft-float"
 
       - name: Test — runs under QEMU and does what we need on the TV
         working-directory: dropbear
         run: |
-          sudo apt-get install -y qemu-user-static
           # These would all have caught the PIE/dynamic-link crash before deploy.
           echo "== ed25519 host key generation =="
           qemu-arm-static ./dropbearmulti dropbearkey -t ed25519 -f /tmp/hk_ed25519
