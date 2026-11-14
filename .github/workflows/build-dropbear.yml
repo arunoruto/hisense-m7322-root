@@ -46,17 +46,16 @@ jobs:
           #define DROPBEAR_CLI_PASSWORD_AUTH 0
           EOF
 
-      - name: Configure (static, non-PIE, no zlib, no utmp/wtmp)
+      - name: Configure (non-PIE, no zlib, no utmp/wtmp)
         working-directory: dropbear
         run: |
-          # -no-pie is essential: Ubuntu gcc defaults to static-PIE, which
-          # crashes on this TV's old kernel/glibc with a _dl_call_libc_early_init
-          # assertion. A classic (non-PIE) static ELF runs fine.
+          # -fno-pie at compile + -static -no-pie at link => classic static ELF.
+          # Ubuntu gcc defaults to static-PIE, which aborts on this TV's old
+          # kernel/glibc with a _dl_call_libc_early_init assertion.
           autoconf && autoheader
           ./configure --host=${CROSS} \
             CC=${CROSS}-gcc \
             CFLAGS="-Os -fno-pie" \
-            LDFLAGS="-no-pie" \
             --disable-zlib \
             --disable-lastlog --disable-utmp --disable-utmpx \
             --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline
@@ -65,19 +64,42 @@ jobs:
         working-directory: dropbear
         run: |
           make -j"$(nproc)" PROGRAMS="dropbear dropbearkey dbclient scp" \
-            MULTI=1 STATIC=1
+            MULTI=1 STATIC=1 LDFLAGS="-static -no-pie"
           ${CROSS}-strip dropbearmulti
 
-      - name: Verify it is a NON-PIE static ARM EABI binary
+      - name: Test — static, non-PIE, ARM EABI5 soft-float (what the TV needs)
         working-directory: dropbear
         run: |
           file dropbearmulti
-          file dropbearmulti | grep -q "ARM" || { echo "not ARM"; exit 1; }
-          file dropbearmulti | grep -q "statically linked" || { echo "not static"; exit 1; }
-          # must NOT be a PIE/shared object (that's the crash cause)
+          file dropbearmulti | grep -q "ARM"             || { echo "FAIL: not ARM"; exit 1; }
+          file dropbearmulti | grep -q "statically linked" || { echo "FAIL: not static"; exit 1; }
+          file dropbearmulti | grep -q "ELF 32-bit LSB executable" || { echo "FAIL: not a plain (non-PIE) executable"; exit 1; }
           if file dropbearmulti | grep -qiE "pie executable|shared object"; then
-            echo "ERROR: built as PIE, will crash on target"; exit 1; fi
-          file dropbearmulti | grep -q "ELF 32-bit LSB executable" || { echo "not a plain executable"; exit 1; }
+            echo "FAIL: PIE build crashes on the TV's kernel"; exit 1; fi
+          # Soft-float ABI: TV userland is ld-linux.so.3 (gnueabi), not -armhf.
+          # A hard-float binary would carry Tag_ABI_VFP_args: VFP registers.
+          if ${CROSS}-readelf -A dropbearmulti | grep -qi "Tag_ABI_VFP_args"; then
+            echo "FAIL: hard-float ABI, TV is soft-float"; exit 1; fi
+          echo "OK: static non-PIE ARM EABI5 soft-float"
+
+      - name: Test — runs under QEMU and does what we need on the TV
+        working-directory: dropbear
+        run: |
+          sudo apt-get install -y qemu-user-static
+          # These would all have caught the PIE/dynamic-link crash before deploy.
+          echo "== ed25519 host key generation =="
+          qemu-arm-static ./dropbearmulti dropbearkey -t ed25519 -f /tmp/hk_ed25519
+          test -s /tmp/hk_ed25519 || { echo "FAIL: no ed25519 key"; exit 1; }
+          echo "== rsa host key generation =="
+          qemu-arm-static ./dropbearmulti dropbearkey -t rsa -s 2048 -f /tmp/hk_rsa
+          test -s /tmp/hk_rsa || { echo "FAIL: no rsa key"; exit 1; }
+          echo "== server binary parses options / prints usage =="
+          qemu-arm-static ./dropbearmulti dropbear -h 2>&1 | grep -qi "dropbear" \
+            || { echo "FAIL: dropbear server did not run"; exit 1; }
+          echo "== client binary runs =="
+          qemu-arm-static ./dropbearmulti dbclient 2>&1 | grep -qi "usage\|dbclient\|dropbear" \
+            || { echo "FAIL: dbclient did not run"; exit 1; }
+          echo "ALL TV SMOKE TESTS PASSED"
           ls -l dropbearmulti
 
       - name: Upload artifact
