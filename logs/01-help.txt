@@ -1,0 +1,187 @@
+enticate- authenticate the kernel image
+authenticateAN- authenticate android's boot and recover image
+auto_flash- do auto flash image.
+
+auto_tftp- do auto-address tftp.
+
+base    - print or set address offset
+bdinfo  - print Board Info structure
+bin2emmc- bin2emmc - read bin file and restore it to emmc
+
+boot    - boot default, i.e., run 'bootcmd'
+bootKL  - booad bootflag.
+
+bootflag_set- bootflag_set   - set bootflag to choose system0 or system1.
+
+bootlogo- bootlogo   - Display otp   - boot image via network using BOOTP/TFTP protocol
+checkVersion- check current verison and upgrade image version
+
+checkstr- check_str_resume
+
+checktee- Check TEE binary
+cleanallenv- cleanall environment variables to persistent storage
+cified file that is in oad partition
+
+config2env- Set configusb.
+
+dbg     - set debug message level. Default level is INFO
+dbtable_init- dbtable_init   - let data  is ready (logo, m
+
+destroy_logo- destroy_logo - Stop logo display 
+
+dhcp    - boot image via network using DHCP/TFTP protocol
+dont_overwrite- This serial apis are for protecting the specific partitions are overwrited. ex: customer
+This cmd is used to register which partition should not be overwrite
+
+dont_overwrite_freeare overwrited. ex: customer
+This cmd is used to free all regcustomer
+This cmd is used to init this function
+
+dont_overwe partitions.
+This cmd is used to disable dont_overwrite funcdraw string with color 
+
+draw_rect- draw_rect - draw rect wi 
+
+du      - du  - Disable UART
+
+dumpSignature- dump the sconsole
+editenv - edit environment variable
+edump   - EMAC R- eMMC sub system
+emmcbin - emmcbin - dump emmc and restore i partition and write it to fat usb disk
+
+env     - environmevironment.
+
+epd     - emac power down
+estart  - EMAC startoad binary file from a Ext2 filesystem
+ext2ls  - list files iExt4 filesystem
+ext4load- load binary file from a Ext4 filesytload- part load binary file from a Ext4 filesystem
+false   -point
+fatfilesize- fatfilesize - load binary file from a dos tload - load binary file from a dos filesystem
+fatls   - listload binary file from a dos filesystem
+
+fatwrite- fatwrite - write binary file to a dos filesystem
+
+filelist- Dump the ftest
+
+filepartload- load part of a file to RAM
+filepartload/restore emmc or nand flash data to/from flash.bin
+
+force_ov force overwrite
+
+force_overwrite_init- This serial apis are for force write and re-create partitions.
+This cmd is used to register which partition should force overwrite
+
+frc_blu_upgrade- frc upgrade commands
+
+get_mmap- get memory info from supernova's mmap
+gettime - gettime   - Get the system executplication at address 'addr'
+gpio    - GPIO Command:
+help    
+
+his_cell_mcu- His Cell Mcu Upgrade Commands
+
+his_datasepaprojectid emmc <id>' and do reset
+his_env - his env
+his_facvb1- Factory VByOne
+his_fatload- load binary file from a dos fgpio Sub-system
+his_histar- his_histar   - exec a script
+his_i2c - his_i2c Sub-system
+his_innertcon- innertcon Sub-systemmand
+his_mmcflag- mmc flag Sub-system
+his_oled- oled control
+
+his_projectid- Project ID operation Sub-system
+his_spi_coem
+his_timer- his_timer Sub-system
+set timer_debug 1 for deb upgrade
+i2c     - I2C sub-system
+if_boot_to_pm- if boot to tial varaible 'dbgLevel' 
+init_raw_io- init raw_io module
+irreturn true/false on integer compare
+kbup    - kbup   - update key bank
+
+kernelProtect- kernelProtect  - Protect kernel
+
+
+kv7636_upgrade- frc upgrade commands
+
+led     - See led code)
+loadenv - loadenv   - load env for nand 
+
+loads   - load S-Record file over serial line
+loadspi - load data from SPloop    - infinite loop on address range
+lvgl_demo- lvgl_demolen to env from supernova's mmap
+
+macaddr - setup EMAC MAC ay_check
+
+mbootver_set- setmbootver   -  for customer show indisplay
+memtest - Get the performance of memory
+miuProtect- rementing address)
+mmc     - MMC sub system
+mmcbininfo- mmcby MMC info
+mmcreg  - mmcreg show ext-csd
+mscompress7- Compreing]
+
+mstar   - update kernal & root file system automaticalion- show changelist - mversion 
+
+mw      - memory write (fill)
+nm      - memory modify (constant address)
+nstar   - nstotect- nuttx Protect  - Protect nuttx
+
+osd_create- osd_creatd layer 
+
+osd_flush- osd_flush - flush canvas to screen 
+
+ad
+
+ota_zip_check- do OTA zip package check.
+
+panel_init- init panel by panel.ini
+
+ping    - send ICMP ECHO_REQUEST toect- runtime pm Protect  - Protect runtime PM
+
+pop_raw_io_coables
+push_raw_io_config- push raw_io current config
+raw_io_tore in the target device
+Yo have to execute 'config_raw_io' tore in the target deviceYo have to execute 'config_raw_io' bemalloc buffer 
+
+readKL  - readKL 
+
+readOptee- readOptee   wipe data or cache.
+
+reset   - Perform RESET of the CPU
+riu     - riu  - riu command
+
+rsa     - rsa cacluate 
+
+run     - run commands in an environment variable
+runtime_pm- if boot to PM
+
+sar     - sar Command:
+saveenv - save environment variables to persistent storage
+sboot_verify_check- sboot_vetb  - Show register command table.    -  showtb [stage]
+
+sho- jump to arm_trusted_firmware
+
+source  - run script from memory
+spi2usb - Read data from spi to usb
+stest   - test IO pe_info- store secure info
+
+sync_mmap- Sync the some id's adda2_fast_upgrade- terra2_fast_upgrade - update terra2 by uart1 into bootargs.
+tftpboot- boot image via network using TFTP protocol
+true    - do nothing, successfully
+udstar  - Executeck cmi transfer board   -  unlock
+
+update_mode- get/set updarsa_reset- ursa upgrade from USB
+
+ursa_upgrade- ursa upgradeom usb to spi
+usb_bin_check- do usb bin document check.
+
+us
+usbboot - boot from USB device
+ustar   - ustar   - update ke_sha256- This command is only for verification 
+
+version - print monitor, compiler and linker version
+wdt_enable- wdt_enage 6M60 Connect to E_UART_PORT2
+
+<< MStar >># 

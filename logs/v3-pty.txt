@@ -1,0 +1,13 @@
+echo '=== BSD pty nodes? ==='; ls /dev/ptyp0 /dev/ttyp0 2>&1; ls /dev/pty* 2>&
+1 | head; echo '=== ptmx ==='; ls -l /dev/ptmx; echo '=== kill test telnetd ==='
+; kill 952 2>/dev/null; sleep 1; cat /proc/net/tcp | awk '{print $2}' | grep -i 
+':0017' || echo PORT_CLEAR
+=== BSD pty nodes? ===
+ls: /dev/ptyp0: No such file or directory
+ls: /dev/ttyp0: No such file or directory
+ls: /dev/pty*: No such file or directory
+=== ptmx ===
+lrwxrwxrwx    1 root     root            13 Jan  1 00:01 [1;36m/dev/ptmx[0m -> [1;31m/dev/pts/ptmx[0m
+=== kill test telnetd ===
+PORT_CLEAR
+# 

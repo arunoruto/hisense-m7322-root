@@ -1,0 +1,33 @@
+echo '=== /proc/filesystems ==='; cat /proc/filesystems; echo '=== CONFIG devp
+ts? ==='; grep -i devpts /proc/filesystems || echo NO_DEVPTS
+=== /proc/filesystems ===
+nodev	sysfs
+nodev	rootfs
+nodev	ramfs
+nodev	bdev
+nodev	proc
+nodev	cgroup
+nodev	cgroup2
+nodev	tmpfs
+nodev	devtmpfs
+nodev	debugfs
+nodev	tracefs
+nodev	securityfs
+nodev	sockfs
+nodev	pipefs
+nodev	rpc_pipefs
+	ext3
+	ext4
+	ext2
+	squashfs
+	vfat
+	msdos
+nodev	nfs
+nodev	nfsd
+	ntfs
+	romfs
+nodev	mqueue
+nodev	oprofilefs
+=== CONFIG devpts? ===
+NO_DEVPTS
+# 

@@ -1,0 +1,24 @@
+echo ===SETSID===; busybox --list | grep -w setsid || echo no-setsid; echo ===
+FW23===; grep -nE 'dport 23|23|telnet' /usr/local/scripts/firewall-init-subrule.
+sh | grep -iE 'telnet|dport 23| 23 ' ; echo ===POLICY===; grep -nE 'policy|-P IN
+PUT|-P FORWARD|DROP' /usr/local/scripts/firewall-init-subrule.sh | head; echo DO
+NE_FW
+===SETSID===
+setsid
+===FW23===
+44:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 23    -j DROP                  #for debug hbbtv telnet
+69:iptables -A FIREWALL_IN_EULAON -p tcp --dport 23      -j DROP                  #for debug hbbtv telnet
+132:iptables -A FIREWALL_IN_EULAOFF -p tcp --dport 23     -j DROP                  #for debug hbbtv telnet
+===POLICY===
+36:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 9222  -j DROP                  #for debug youtube
+37:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 4444  -j DROP                  #for debug youtube WebDriver
+38:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 9666  -j DROP                  #for debug hisenseUI devTool
+39:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 4445  -j DROP                  #for debug hisenseUI WebDriver
+40:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 12321 -j DROP                  #for debug LMQ
+41:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 9536  -j DROP                  #for debug netflix
+42:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 10001 -j DROP                  #for debug mosquito
+43:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 1025  -j DROP                  #for debug resmon/kilby
+44:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 23    -j DROP                  #for debug hbbtv telnet
+45:iptables -A FIREWALL_OUT_EULAOFF -p tcp --sport 22    -j DROP                  #for debug sshd
+DONE_FW
+# 

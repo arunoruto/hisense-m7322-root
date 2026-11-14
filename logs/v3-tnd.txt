@@ -1,0 +1,9 @@
+/bin/busybox telnetd -l /bin/sh -p 23; echo EXIT=$?; sleep 1; echo '=== ps ===
+'; ps w | grep -i telnet | grep -v grep; echo '=== listen 0017 ==='; cat /proc/n
+et/tcp | awk '{print $2}' | grep -i ':0017' || echo NOT_LISTENING
+EXIT=0
+=== ps ===
+  952 root     /bin/busybox telnetd -l /bin/sh -p 23
+=== listen 0017 ===
+00000000:0017
+# 

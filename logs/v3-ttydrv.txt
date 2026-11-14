@@ -1,0 +1,13 @@
+echo '=== /proc/tty/drivers ==='; cat /proc/tty/drivers; echo '=== config.gz? 
+==='; ls -l /proc/config.gz 2>&1; echo '=== pty in dmesg ==='; dmesg | grep -i p
+ty
+=== /proc/tty/drivers ===
+/dev/tty             /dev/tty        5       0 system:/dev/tty
+/dev/console         /dev/console    5       1 system:console
+/dev/vc/0            /dev/vc/0       4       0 system:vtmaster
+serial               /dev/ttyS       4 64-69 serial
+unknown              /dev/tty        4 1-63 console
+=== config.gz? ===
+ls: /proc/config.gz: No such file or directory
+=== pty in dmesg ===
+# 

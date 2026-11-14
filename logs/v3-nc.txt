@@ -1,0 +1,8 @@
+echo '=== nc applet help ==='; /bin/busybox nc 2>&1 | head -20; echo '=== appl
+ets of interest ==='; /bin/busybox 2>&1 | tr ',' '\n' | grep -iE 'nc|telnetd|mkf
+ifo|setsid|getty' 
+=== nc applet help ===
+nc: applet not found
+=== applets of interest ===
+/bin/sh: tr: not found
+# 

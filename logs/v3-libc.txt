@@ -1,0 +1,65 @@
+echo '=== arch ==='; uname -a; echo '=== busybox interp ==='; ls -l /lib/ld* 2
+>&1; echo '=== libc ==='; ls -l /lib/libc* /lib/libuClibc* /lib/libc.so* 2>&1 | 
+head; echo '=== /lib ==='; ls /lib 2>&1 | head -40; echo '=== eth ==='; ls /sys/
+class/net 2>&1; echo '=== free bin space p26 ==='; df -h /usr/local 2>&1
+=== arch ===
+Linux (none) 4.9.44+ #2 SMP PREEMPT Wed Feb 19 02:31:12 CST 2025 armv7l GNU/Linux
+=== busybox interp ===
+-rwxr-xr-x    1 999      999         139216 Feb 20  2020 [1;32m/lib/ld-2.18.so[0m
+lrwxrwxrwx    1 999      999             10 Feb 19  2020 [1;36m/lib/ld-linux.so.3[0m -> [1;32mld-2.18.so[0m
+=== libc ===
+ls: /lib/libuClibc*: No such file or directory
+-rwxr-xr-x    1 999      999        2327160 Feb 20  2020 /lib/libc-2.18.so
+lrwxrwxrwx    1 999      999             12 Feb 19  2020 /lib/libc.so.6 -> libc-2.18.so
+lrwxrwxrwx    1 999      999             12 Feb 19  2020 /lib/libc.so.6 -> libc-2.18.so
+-rwxr-xr-x    1 999      999         198492 Feb 20  2020 /lib/libcidn-2.18.so
+lrwxrwxrwx    1 999      999             15 Feb 19  2020 /lib/libcidn.so.1 -> libcidn-2.18.so
+-rwxr-xr-x    1 999      999          43353 Feb 20  2020 /lib/libcrypt-2.18.so
+lrwxrwxrwx    1 999      999             16 Feb 19  2020 /lib/libcrypt.so.1 -> libcrypt-2.18.so
+=== /lib ===
+firmware
+ld-2.18.so
+ld-linux.so.3
+libBrokenLocale-2.18.so
+libBrokenLocale.so.1
+libSegFault.so
+libanl-2.18.so
+libanl.so.1
+libc-2.18.so
+libc.so.6
+libcidn-2.18.so
+libcidn.so.1
+libcrypt-2.18.so
+libcrypt.so.1
+libdl-2.18.so
+libdl.so.2
+libgcc_s.so
+libgcc_s.so.1
+libm-2.18.so
+libm.so.6
+libmemusage.so
+libnsl-2.18.so
+libnsl.so.1
+libnss_compat-2.18.so
+libnss_compat.so.2
+libnss_db-2.18.so
+libnss_db.so.2
+libnss_dns-2.18.so
+libnss_dns.so.2
+libnss_files-2.18.so
+libnss_files.so.2
+libnss_hesiod-2.18.so
+libnss_hesiod.so.2
+libnss_nis-2.18.so
+libnss_nis.so.2
+libnss_nisplus-2.18.so
+libnss_nisplus.so.2
+libpcprofile.so
+libpthread-2.18.so
+libpthread.so.0
+=== eth ===
+ls: /sys/class/net: No such file or directory
+=== free bin space p26 ===
+Filesystem                Size      Used Available Use% Mounted on
+/dev/mmcblk0p26         232.2M    173.0M     54.4M  76% /usr/local
+# 

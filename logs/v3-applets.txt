@@ -1,0 +1,24 @@
+/bin/busybox 2>&1 | sed -n '/Currently defined functions/,$p'
+Currently defined functions:
+	[, [[, ar, ash, awk, base64, basename, beep, blockdev, bootchartd,
+	bunzip2, bzcat, bzip2, cat, chattr, chgrp, chmod, chown, chroot, clear,
+	conspy, cp, cpio, cut, date, dd, depmod, devmem, df, dhcprelay, diff,
+	dmesg, du, dumpleases, echo, egrep, env, expr, fdisk, fgconsole, fgrep,
+	find, flock, free, freeramdisk, fsck, fstrim, fsync, ftpget, ftpput,
+	getty, grep, groups, gunzip, gzip, halt, head, hexdump, id, ifconfig,
+	ifplugd, init, insmod, install, iostat, ip, kill, killall, killall5,
+	klogd, linuxrc, ln, logger, login, logread, losetup, ls, lsattr, lsmod,
+	lsof, lspci, lsusb, lzop, lzopcat, makedevs, md5sum, mdev, mesg, mkdir,
+	mkdosfs, mke2fs, mkfs.ext2, mkfs.vfat, mknod, mkswap, modinfo,
+	modprobe, mount, mpstat, mv, nanddump, nandwrite, nbd-client, netstat,
+	nice, ntpd, pidof, ping, pmap, poweroff, powertop, printenv, ps,
+	pstree, pwd, pwdx, reboot, renice, rev, rm, rmdir, rmmod, route,
+	scriptreplay, sed, setserial, setsid, sh, sha3sum, sleep, smemcap,
+	stat, stty, su, swapoff, swapon, sync, sysctl, syslogd, tail, tar,
+	taskset, telnet, telnetd, test, tftp, time, timeout, top, touch, tty,
+	ttysize, ubiattach, ubidetach, ubimkvol, ubirmvol, ubirsvol,
+	ubiupdatevol, udhcpc, udhcpd, umount, uname, uncompress, unlzop, unxz,
+	unzip, uptime, users, usleep, vi, volname, wall, watch, wc, wget,
+	which, who, whoami, whois, xz, xzcat, zcat
+
+# 

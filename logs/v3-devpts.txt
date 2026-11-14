@@ -1,0 +1,17 @@
+mkdir -p /dev/pts; mount -t devpts devpts /dev/pts; [ -e /dev/ptmx ] || ln -sf
+ /dev/pts/ptmx /dev/ptmx; ls -l /dev/ptmx /dev/pts; echo ---; /bin/busybox telne
+td --help 2>&1 | head -5; echo ---BBOX---; /bin/busybox 2>&1 | grep -o telnetd
+mount: mounting devpts on /dev/pts failed: No such device
+lrwxrwxrwx    1 root     root            13 Jan  1 00:01 [1;36m/dev/ptmx[0m -> [1;31m/dev/pts/ptmx[0m
+
+/dev/pts:
+total 0
+---
+BusyBox v1.22.1 (2021-05-14 15:19:50 CST) multi-call binary.
+
+Usage: telnetd [OPTIONS]
+
+Handle incoming telnet connections
+---BBOX---
+telnetd
+# 

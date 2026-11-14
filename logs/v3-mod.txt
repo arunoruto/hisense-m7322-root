@@ -1,0 +1,10 @@
+echo '=== modprobe devpts ==='; modprobe devpts 2>&1; echo rc=$?; echo '=== an
+y pty/pts .ko (lib/modules) ==='; find /lib/modules -iname '*pts*' -o -iname '*p
+ty*' 2>/dev/null; echo '=== module dir ==='; ls /lib/modules 2>&1
+=== modprobe devpts ===
+modprobe: module 'devpts' not found
+rc=0
+=== any pty/pts .ko (lib/modules) ===
+=== module dir ===
+[1;36m4.9.44+[0m
+# 

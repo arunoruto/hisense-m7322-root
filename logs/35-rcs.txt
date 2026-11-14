@@ -1,0 +1,110 @@
+echo ===RCS===; cat /etc/init.d/rcS; echo ===GREP_STAGE===; grep -rn 'stage\|/
+scripts/' /etc 2>/dev/null | head -20; echo END_RCS
+===RCS===
+#!/bin/sh
+
+
+mount /proc
+mount /sys
+mount /dev
+
+otaflag=$(sed 's/ /\n/g' /proc/cmdline | grep "otaflag" | awk -F '=' '{print $2}')
+echo "otaflag = $otaflag"
+if [ "$otaflag" != "170" ];then
+    mount -a
+else
+    mount -t tmpfs -o size=800M /tmp
+    mount -t ext4 -o noatime,nodiratime,errors=continue /dev/mmcblk0p37 /OAD
+    if [ $? -ne 0 ]; then
+        /sbin/mkfs.ext4 -FF /dev/mmcblk0p37
+        mount -t ext4 -o noatime,nodiratime,errors=continue /dev/mmcblk0p37 /OAD
+    fi
+fi
+#Hisense shenlongxian add --begin
+bootflag=$(grep "bootflag=1" /proc/cmdline)
+if [[ "$bootflag" == "" ]];then
+    echo "using system A"
+else
+    echo "using system B"
+fi
+
+mkdir /dev/shm
+mkdir -p /var/local
+mount -t ext4 -o nobarrier,noatime,nodiratime /dev/mmcblk0p29 /var/local
+mount -t ext4 -o nobarrier,noatime,nodiratime /dev/mmcblk0p32 /var/local/tvservice
+# Hisense shenlongxian add --end
+
+[ ! -d /var/local/boot ] && mkdir -p /var/local/boot -m 666
+[ ! -d /var/local/lib ] && mkdir -p /var/local/lib -m 666
+[ ! -d /var/local/etc ] && mkdir -p /var/local/etc -m 666
+[ ! -d /var/local/wifi ] && mkdir /var/local/wifi -m 666
+[ ! -f /var/local/etc/localtime ] && touch /var/local/etc/localtime
+chmod 666 /var/local/etc/localtime
+
+# Amazon start cache dirctory /OAD/Amazon -> /var/local/Amazon
+[ ! -d /var/local/Amazon ] && mkdir -p /var/local/Amazon -m 777 && chown AMAZON:AMAZON /var/local/Amazon
+if [ -d /OAD/Amazon ]; then
+    if [ ! -L /OAD/Amazon ]; then
+        rm -rf /OAD/Amazon
+        ln -s /var/local/Amazon /OAD/Amazon
+    fi
+else
+    ln -s /var/local/Amazon /OAD/Amazon
+fi
+# Amazon end
+/usr/local/bin/initspecialenv
+
+. /etc/insmoddrv_pre.sh &
+
+mknod /dev/system    c 148 0
+mknod /dev/msmailbox c 175 0
+mknod /dev/gflip     c 234 0
+mknod /dev/fw        c 246 0
+mknod /dev/ir c 156 0
+mknod /dev/mali0 c 238 0
+
+# Hisense sunliqing add --begin
+#mount -t debugfs nodev /sys/kernel/debug
+#echo 0x1000 >/sys/kernel/debug/fault_around_bytes
+#umount /sys/kernel/debug
+# Hisense sunliqing add --end
+
+mkdir -p /dev/block/
+ln -s /dev/mmcb* /dev/block/
+
+if [ "$otaflag" != "170" ];then
+    echo "Run update_dev.sh in background."
+/etc/update_dev.sh&
+    #update dev
+else
+    echo "Run update_dev.sh in foreground."
+/etc/update_dev.sh
+    #ota_update dev
+fi
+
+#bootchartd start &
+
+# start firewall
+echo "start network firewall"
+mkdir -p /var/run/
+touch /var/run/xtables.lock
+chmod 666 xtables.lock
+export PATH=${PATH}:/usr/local/bin/
+sh /usr/local/scripts/start-firewall.sh
+
+if [ ! -e "/etc/update_dev.sh" ];then
+    export LD_LIBRARY_PATH=/lib:/mslib:/mslib/utopia:/std_lib/lib:/tvservice/conflictlib:/system/lib
+    export PATH=$PATH:/applications/bin:/system/bin
+    /applications/bin/svrmgr &
+    /applications/bin/MiSysSrv &
+fi
+===GREP_STAGE===
+/etc/init.d/rcS:90:sh /usr/local/scripts/start-firewall.sh
+/etc/profile:146:            if [ -x /usr/local/scripts/loadwifi.sh ]; then
+/etc/profile:147:                /usr/local/scripts/loadwifi.sh &
+/etc/profile:157:            if [ -x /usr/local/scripts/loadbt.sh ]; then
+/etc/profile:159:                    /usr/local/scripts/loadbt.sh first &
+/etc/vendor/app.cfg:492:argv1 = /usr/local/scripts/signal_mainready.sh
+/etc/vendor/app.cfg.bak:492:argv1 = /usr/local/scripts/signal_mainready.sh
+END_RCS
+# 

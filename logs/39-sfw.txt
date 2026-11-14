@@ -1,0 +1,33 @@
+echo __SFW_START__; cat /usr/local/scripts/start-firewall.sh; echo __SFW_END__
+__SFW_START__
+#!/bin/sh
+
+export PATH=${PATH}:/usr/local/bin/
+
+iptables -X
+iptables -F
+iptables -N FIREWALL_OUT_EULAOFF
+iptables -N FIREWALL_OUT_EULAON
+iptables -N FIREWALL_IN_EULAOFF
+iptables -N FIREWALL_IN_EULAON
+
+
+FILE_EULA_STATUS="/var/local/eula_dpp_setting/current/eula_dpp_status.ini"
+FLAG_EULA=`cat ${FILE_EULA_STATUS} |sed 's/ //g' |grep eula |awk -F '=' '{print $NF}' `
+
+if [ "1" == "${FLAG_EULA}" ] ; then
+  echo "eula is on"
+  #iptables -A OUTPUT -j FIREWALL_OUT_EULAON
+  #iptables -A INPUT -j FIREWALL_IN_EULAON
+else
+  # 0 or nothing
+  echo "eula is off"
+  iptables -A OUTPUT -j FIREWALL_OUT_EULAOFF
+  iptables -A INPUT  -j FIREWALL_IN_EULAOFF
+fi
+
+
+sh /usr/local/scripts/firewall-init-subrule.sh &
+
+__SFW_END__
+# 
