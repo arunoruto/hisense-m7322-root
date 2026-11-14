@@ -46,12 +46,17 @@ jobs:
           #define DROPBEAR_CLI_PASSWORD_AUTH 0
           EOF
 
-      - name: Configure (static, no zlib, no utmp/wtmp)
+      - name: Configure (static, non-PIE, no zlib, no utmp/wtmp)
         working-directory: dropbear
         run: |
+          # -no-pie is essential: Ubuntu gcc defaults to static-PIE, which
+          # crashes on this TV's old kernel/glibc with a _dl_call_libc_early_init
+          # assertion. A classic (non-PIE) static ELF runs fine.
           autoconf && autoheader
           ./configure --host=${CROSS} \
             CC=${CROSS}-gcc \
+            CFLAGS="-Os -fno-pie" \
+            LDFLAGS="-no-pie" \
             --disable-zlib \
             --disable-lastlog --disable-utmp --disable-utmpx \
             --disable-wtmp --disable-wtmpx --disable-pututline --disable-pututxline
@@ -60,15 +65,19 @@ jobs:
         working-directory: dropbear
         run: |
           make -j"$(nproc)" PROGRAMS="dropbear dropbearkey dbclient scp" \
-            MULTI=1 STATIC=1 LDFLAGS="-static"
+            MULTI=1 STATIC=1
           ${CROSS}-strip dropbearmulti
 
-      - name: Verify it is a static ARM EABI binary
+      - name: Verify it is a NON-PIE static ARM EABI binary
         working-directory: dropbear
         run: |
           file dropbearmulti
           file dropbearmulti | grep -q "ARM" || { echo "not ARM"; exit 1; }
           file dropbearmulti | grep -q "statically linked" || { echo "not static"; exit 1; }
+          # must NOT be a PIE/shared object (that's the crash cause)
+          if file dropbearmulti | grep -qiE "pie executable|shared object"; then
+            echo "ERROR: built as PIE, will crash on target"; exit 1; fi
+          file dropbearmulti | grep -q "ELF 32-bit LSB executable" || { echo "not a plain executable"; exit 1; }
           ls -l dropbearmulti
 
       - name: Upload artifact
